@@ -1,11 +1,13 @@
 package com.pedromoreirareisgmail.rmtroco;
 
+import android.content.Context;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
@@ -15,6 +17,9 @@ import java.text.NumberFormat;
 public class MainActivity extends AppCompatActivity {
 
     private static final NumberFormat formatarNumero = NumberFormat.getCurrencyInstance();
+    private double mValorVenda = 0;
+    private double mValorRecebido = 0;
+    private String mTextoErro = "";
     private EditText mEtValorVenda;
     private EditText mEtValorRecebido;
     private final EditText.OnTouchListener mTouchListnerEditFocoCursorFim = new View.OnTouchListener() {
@@ -28,11 +33,13 @@ public class MainActivity extends AppCompatActivity {
                 case R.id.et_valor_recebido:
                     mEtValorRecebido.requestFocus();
                     mEtValorRecebido.setSelection(mEtValorRecebido.getText().length());
+                    mostrarTeclado(mEtValorRecebido);
                     return true;
 
                 case R.id.et_valor_venda:
                     mEtValorVenda.requestFocus();
                     mEtValorVenda.setSelection(mEtValorVenda.getText().length());
+                    mostrarTeclado(mEtValorVenda);
                     return true;
 
                 default:
@@ -40,14 +47,9 @@ public class MainActivity extends AppCompatActivity {
             }
         }
     };
-    private Button mButLimpar;
     private TextView mTvTroco;
     private TextView mTvTrocoLabel;
     private boolean isFormatarCurrencyAtualizado = false;
-
-    double mValorVenda = 0;
-    double mValorRecebido = 0;
-    String mTextoErro = "";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -57,7 +59,7 @@ public class MainActivity extends AppCompatActivity {
 
         mEtValorVenda = (EditText) findViewById(R.id.et_valor_venda);
         mEtValorRecebido = (EditText) findViewById(R.id.et_valor_recebido);
-        mButLimpar = (Button) findViewById(R.id.but_limpar);
+        Button mButLimpar = (Button) findViewById(R.id.but_limpar);
         mTvTroco = (TextView) findViewById(R.id.tv_troco);
         mTvTrocoLabel = (TextView) findViewById(R.id.tv_troco_label);
 
@@ -132,19 +134,19 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
 
-               if(count > 11){
-                   mTvTroco.setTextSize(44);
-               }else if (count > 10){
-                   mTvTroco.setTextSize(48);
-               }else if (count > 9){
-                   mTvTroco.setTextSize(52);
-               }else if (count > 8){
-                   mTvTroco.setTextSize(56);
-               }else if(count > 7){
-                   mTvTroco.setTextSize(64);
-               }else{
-                   mTvTroco.setTextSize(76);
-               }
+                if (count > 11) {
+                    mTvTroco.setTextSize(44);
+                } else if (count > 10) {
+                    mTvTroco.setTextSize(48);
+                } else if (count > 9) {
+                    mTvTroco.setTextSize(52);
+                } else if (count > 8) {
+                    mTvTroco.setTextSize(56);
+                } else if (count > 7) {
+                    mTvTroco.setTextSize(64);
+                } else {
+                    mTvTroco.setTextSize(76);
+                }
             }
 
             @Override
@@ -183,9 +185,9 @@ public class MainActivity extends AppCompatActivity {
         mValorRecebido = formatarParaDouble(mEtValorRecebido.getText().toString().trim());
         mTextoErro = getString(R.string.valor_maior) + " " + formatarDoubleParaCurrency(mValorVenda);
 
-        if(mValorVenda != 0 && mValorRecebido != 0){
+        if (mValorVenda != 0 && mValorRecebido != 0) {
 
-            if (mValorVenda > mValorRecebido)  {
+            if (mValorVenda > mValorRecebido) {
 
                 mEtValorRecebido.setError(mTextoErro);
                 mTvTrocoLabel.setText("");
@@ -195,12 +197,8 @@ public class MainActivity extends AppCompatActivity {
 
                 mTvTroco.setText(formatarDoubleParaCurrency(mValorRecebido - mValorVenda));
                 mTvTrocoLabel.setText(getString(R.string.valor_troco));
+                mEtValorRecebido.setError(null);
             }
-        }else{
-            /*mTvTroco.setText(formatarDoubleParaCurrency(mValorRecebido - mValorVenda));
-            mTvTroco.setText("");
-            mTvTrocoLabel.setText("");*/
-
         }
     }
 
@@ -210,6 +208,12 @@ public class MainActivity extends AppCompatActivity {
     Utils
 
      */
+
+    private void mostrarTeclado(EditText meuEdit) {
+
+        InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+        imm.showSoftInput(meuEdit, InputMethodManager.SHOW_IMPLICIT);
+    }
 
     private String formatarParaCurrency(String str) {
 
