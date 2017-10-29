@@ -1,7 +1,7 @@
 package com.pedromoreirareisgmail.rmtroco;
 
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.MotionEvent;
@@ -9,21 +9,14 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import java.text.NumberFormat;
 
 public class MainActivity extends AppCompatActivity {
 
+    private static final NumberFormat formatarNumero = NumberFormat.getCurrencyInstance();
     private EditText mEtValorVenda;
     private EditText mEtValorRecebido;
-    private Button mButCalcular;
-    private Button mButLimpar;
-    private TextView mTvTroco;
-
-    private boolean isFormatarCurrencyAtualizado = false;
-    private static final NumberFormat formatarNumero = NumberFormat.getCurrencyInstance();
-
     private final EditText.OnTouchListener mTouchListnerEditFocoCursorFim = new View.OnTouchListener() {
         @Override
         public boolean onTouch(View view, MotionEvent motionEvent) {
@@ -47,6 +40,14 @@ public class MainActivity extends AppCompatActivity {
             }
         }
     };
+    private Button mButLimpar;
+    private TextView mTvTroco;
+    private TextView mTvTrocoLabel;
+    private boolean isFormatarCurrencyAtualizado = false;
+
+    double mValorVenda = 0;
+    double mValorRecebido = 0;
+    String mTextoErro = "";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -56,9 +57,13 @@ public class MainActivity extends AppCompatActivity {
 
         mEtValorVenda = (EditText) findViewById(R.id.et_valor_venda);
         mEtValorRecebido = (EditText) findViewById(R.id.et_valor_recebido);
-        mButCalcular = (Button) findViewById(R.id.but_calcular);
         mButLimpar = (Button) findViewById(R.id.but_limpar);
         mTvTroco = (TextView) findViewById(R.id.tv_troco);
+        mTvTrocoLabel = (TextView) findViewById(R.id.tv_troco_label);
+
+        mEtValorRecebido.setOnTouchListener(mTouchListnerEditFocoCursorFim);
+        mEtValorVenda.setOnTouchListener(mTouchListnerEditFocoCursorFim);
+
 
         mEtValorRecebido.addTextChangedListener(new TextWatcher() {
             @Override
@@ -79,6 +84,8 @@ public class MainActivity extends AppCompatActivity {
 
                 mEtValorRecebido.setText(formatarParaCurrency(charSequence.toString().trim()));
                 mEtValorRecebido.setSelection(mEtValorRecebido.getText().length());
+
+                calcularTroco();
             }
 
             @Override
@@ -106,6 +113,8 @@ public class MainActivity extends AppCompatActivity {
 
                 mEtValorVenda.setText(formatarParaCurrency(charSequence.toString().trim()));
                 mEtValorVenda.setSelection(mEtValorVenda.getText().length());
+
+                calcularTroco();
             }
 
             @Override
@@ -114,58 +123,93 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        mTvTroco.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+
+               if(count > 11){
+                   mTvTroco.setTextSize(44);
+               }else if (count > 10){
+                   mTvTroco.setTextSize(48);
+               }else if (count > 9){
+                   mTvTroco.setTextSize(52);
+               }else if (count > 8){
+                   mTvTroco.setTextSize(56);
+               }else if(count > 7){
+                   mTvTroco.setTextSize(64);
+               }else{
+                   mTvTroco.setTextSize(76);
+               }
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+
+            }
+        });
+
+        semCursorFocoSelecaoZerado(mEtValorRecebido);
+        semCursorFocoSelecaoZerado(mEtValorVenda);
 
         mButLimpar.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
 
-                mEtValorRecebido.setText("0");
+                mValorVenda = 0;
+                mValorRecebido = 0;
+                mTextoErro = "";
+
+                mEtValorRecebido.setError(null);
                 mEtValorVenda.setText("0");
+                mEtValorRecebido.setText("0");
                 mTvTroco.setText("");
 
                 mEtValorVenda.requestFocus();
             }
         });
 
-        mButCalcular.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-
-                double valorVenda = formatarParaDouble(mEtValorVenda.getText().toString().trim());
-                double valorRecebido = formatarParaDouble(mEtValorRecebido.getText().toString().trim());
-
-                if(valorVenda == 0){
-                    mEtValorVenda.setError(getString(R.string.valor_error));
-                    mEtValorVenda.requestFocus();
-                    mTvTroco.setText("");
-                }
-
-                if(valorRecebido == 0){
-                    mEtValorRecebido.setError(getString(R.string.valor_error));
-                    mEtValorRecebido.requestFocus();
-                    mTvTroco.setText("");
-                }
-
-                if(valorVenda > valorRecebido){
-
-                    mEtValorRecebido.setError(getString(R.string.valor_maior ) + " " + formatarDoubleParaCurrency(valorVenda));
-                    mTvTroco.setText("");
-
-                }else{
-
-                    mTvTroco.setText(formatarDoubleParaCurrency(valorRecebido - valorVenda));
-                }
-            }
-        });
-
-        mEtValorRecebido.setOnTouchListener(mTouchListnerEditFocoCursorFim);
-        mEtValorVenda.setOnTouchListener(mTouchListnerEditFocoCursorFim);
-
-        semCursorFocoSelecaoZerado(mEtValorRecebido);
-        semCursorFocoSelecaoZerado(mEtValorVenda);
 
     }
 
+
+    private void calcularTroco() {
+
+        mValorVenda = formatarParaDouble(mEtValorVenda.getText().toString().trim());
+        mValorRecebido = formatarParaDouble(mEtValorRecebido.getText().toString().trim());
+        mTextoErro = getString(R.string.valor_maior) + " " + formatarDoubleParaCurrency(mValorVenda);
+
+        if(mValorVenda != 0 && mValorRecebido != 0){
+
+            if (mValorVenda > mValorRecebido)  {
+
+                mEtValorRecebido.setError(mTextoErro);
+                mTvTrocoLabel.setText("");
+                mTvTroco.setText("");
+
+            } else {
+
+                mTvTroco.setText(formatarDoubleParaCurrency(mValorRecebido - mValorVenda));
+                mTvTrocoLabel.setText(getString(R.string.valor_troco));
+            }
+        }else{
+            /*mTvTroco.setText(formatarDoubleParaCurrency(mValorRecebido - mValorVenda));
+            mTvTroco.setText("");
+            mTvTrocoLabel.setText("");*/
+
+        }
+    }
+
+
+    /*
+
+    Utils
+
+     */
 
     private String formatarParaCurrency(String str) {
 
@@ -214,14 +258,12 @@ public class MainActivity extends AppCompatActivity {
 
             return 0;
         }
-
     }
-
 
     private void semCursorFocoSelecaoZerado(EditText editText) {
 
         editText.setText("0");
-      //  editText.setCursorVisible(false);
+        //  editText.setCursorVisible(false);
         editText.setSelectAllOnFocus(false);
     }
 }
