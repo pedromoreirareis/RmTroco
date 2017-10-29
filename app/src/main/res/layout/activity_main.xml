@@ -100,9 +100,6 @@
         android:textColor="@color/colorBlack"
         android:textStyle="bold" />
 
-
-
-
 </LinearLayout>
 
     <ImageView
